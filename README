@@ -35,6 +35,7 @@ State of penduinART
 
 Working right now:
 - base engine supports loading image resources and rendering
+- any-point-in-the-armature rotation, transparency, scaling effects
 - "thingmaker" tool helps easily arrange images into armatures
 - simple examples showing penduinART usage
 
@@ -45,3 +46,8 @@ Planned features:
 - full scene support in engine
 - game templates for easily starting new projects
 - music assets: loading and customizable looping
+- full object management and animation
+- collision detection, off-limits area marking
+- particle effects
+- procedural armatures
+- scrapheap monster demo - build randomized critters from scrapheap assets
