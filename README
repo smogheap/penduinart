@@ -1,0 +1,47 @@
+penduinART
+==========
+
+HTML5 Game engine.  Piece together multiple images into armatures and settings
+which are easy to adjust and animate.  Assets are plain images, structural
+data is plain JSON, and code is plain JavaScript.
+
+
+Where to start
+--------------
+
+The files "thingmaker.html" and "test.html" are the most interesting at the
+moment.  They're not pretty, but using and editing them will show you around
+the current state of penduinART.
+
+Eventually, "src/penduinart.js" will be the main engine.
+
+Probably, "src/smogheapinput.js" will be revamped and become its own thing.
+
+
+Philosophy
+----------
+
+penduinART aims to be:
+- Useful for quickly turning scribbles (or even good artwork ;^) into games.
+- Dependency-free.  If someone wants JQuery or whatever, that's their problem.
+- Fun and easy for 2D web games.  Not one engine to rule them all.
+- Efficient and fast, though not at the expense of clarity or ease of use.
+- FirefoxOS phone ready.  (And any low-end but highly-interesting web device.)
+- Free as in speech, free as in beer, free to learn from and build upon.
+
+
+State of penduinART
+-------------------
+
+Working right now:
+- base engine supports loading image resources and rendering
+- "thingmaker" tool helps easily arrange images into armatures
+- simple examples showing penduinART usage
+
+Planned features:
+- poses and animations supported in engine and "thingmaker"
+- generic input mapper with keyboard, mouse, gamepad, touch support
+- "placemaker" tool for easily creating multi-layered scrollable settings
+- full scene support in engine
+- game templates for easily starting new projects
+- music assets: loading and customizable looping

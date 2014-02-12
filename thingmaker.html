@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>penduinART thingmaker</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <style>
+      body {
+        background: silver;
+      }
+      #resources img {
+        display: none;
+      }
+    </style>
+    <script src="src/penduinart.js"></script>
+    <script src="src/thingmaker.js"></script>
+  </head>
+  <body>
+    <h3>Step 0</h3>
+    <p>
+	  Edit this HTML file and toss in your image pieces.
+    </p>
+    <hr>
+    <h3>Step 1</h3>
+    <p>
+      Futz with the individual settings for each image piece.
+    </p>
+    <div id="resources">
+<!-- TOSS PIECES IN HERE! -->
+
+
+      <img src="image/body.png">
+      <img src="image/arm.png">
+      <img src="image/legs.png">
+
+
+<!-- TOSS PIECES IN HERE! -->
+    </div>
+    <hr>
+    <h3>Step 2</h3>
+    <p>
+      Make the thing.
+    </p>
+    thing name: <input id="name">
+    <br>
+    thing scale: <input id="scale" value="1.0">
+    <br>
+    active pieces: <select multiple id="pieces"></select>
+    drag mode:
+    <select id="mode">
+      <option value="offset">offset</option>
+      <option value="rotate">rotate</option>
+      <option value="scale">scale</option>
+      <option value="alpha">alpha</option>
+      <option value="hitbox">set hitbox</option>
+      <option value="pan">pan view</option>
+      <option value="zoom">zoom view</option>
+    </select>
+    <br>
+    <canvas width=640 height=360 id="assemble"></canvas>
+    <hr>
+    <h3>Step 3</h3>
+    <p>
+      TODO: build animation editing tools :^)
+    </p>
+    <hr>
+    <h3>Step 4</h3>
+    <p>
+      Here is the thing's JSON!
+    </p>
+    <textarea cols=80 rows=24 id="json"></textarea>
+  </body>
+</html>
