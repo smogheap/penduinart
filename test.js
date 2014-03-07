@@ -62,8 +62,17 @@ var warriorJSON = {
 function render() {
 	ctx.fillStyle = "#444";
 	ctx.fillRect(0, 0, canv.width, canv.height);
-	//warrior.draw(ctx, 0.1, 160, 160);
-	//warrior.draw(ctx, -0.1, 320+160, 160);
+
+	/*
+	//stress-test!  :^)
+	var i = 0;
+	var j = 0;
+	for(i = 0; i < 12; i++) {
+		for(j = 0; j < 6; j++) {
+			warrior.draw(ctx, 0.05, 50 * (i + 1), 50 * (j + 1) + 40);
+		}
+	}
+	*/
 	warrior.draw(ctx, 0.2, 320, 320);
 }
 
@@ -74,6 +83,9 @@ function walk(timestamp) {
 	if(stop) {
 		stop = false;
 		return;
+	}
+	if(!start) {
+		start = timestamp;
 	}
 	window.requestAnimationFrame(walk);
 
@@ -116,7 +128,6 @@ window.addEventListener("load", function() {
 		stop = true;
 	});
 	document.querySelector("#walk").addEventListener("click", function() {
-		start = Date.now();
 		window.requestAnimationFrame(walk);
 	});
 });
