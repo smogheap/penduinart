@@ -9,6 +9,7 @@ var TM = {
 	po: null
 };
 
+
 function render() {
 	var scale = parseFloat(document.querySelector("#scale").value);
 	TM.asm.width = TM.asm.width;
