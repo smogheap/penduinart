@@ -5,6 +5,11 @@ HTML5 Game engine.  Piece together multiple images into armatures and settings
 which are easy to adjust and animate.  Assets are plain images, structural
 data is plain JSON, and code is plain JavaScript.
 
+Unlike other HTML5 game engines, penduinART centers on the artwork, not tiles
+or spritesheets.  It may be used to create grid-based games, but has no
+restrictions or internal concept of tiles.  Animation will support swapping
+out images, but is focused on armatures made of image pieces.
+
 
 Where to start
 --------------
@@ -12,6 +17,8 @@ Where to start
 The files "thingmaker.html" and "test.html" are the most interesting at the
 moment.  They're not pretty, but using and editing them will show you around
 the current state of penduinART.
+
+Music support is in-progress and can be played with using "musictool.html".
 
 Eventually, "src/penduinart.js" will be the main engine.
 
