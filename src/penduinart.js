@@ -6,6 +6,12 @@ if(!console) {
 }
 
 function penduinOBJ(obj, cb) {
+	/* internals */
+	//FIXME: no this. everywhere
+	this.x = 0;
+	this.y = 0;
+	tags = [];
+
 	this.load = function load(obj, cb) {
 		this.obj = obj || {};
 		this.obj._$ = {};
@@ -50,10 +56,13 @@ function penduinOBJ(obj, cb) {
 		}
 		return total === this.obj._imgLoaded;
 	},
-	this.draw = function draw(ctx, scale, x, y) {
-		this.drawPart(ctx, this.obj, scale, x, y);
-	},
+
 	this.drawPart = function drawPart(ctx, part, scale, x, y) {
+		if(part.tag && tags.indexOf(part.tag) < 0) {
+			// this part has a tag we're not using; skip drawing.
+			return;
+		}
+
 		var TO_RADIANS = Math.PI/180;
 		var offx = 0;
 		var offy = 0;
@@ -119,10 +128,196 @@ function penduinOBJ(obj, cb) {
 		ctx.restore();
 	};
 
+
+	/* API */
+
+	// set/replace tags (to show/hide different parts)
+	this.setTags = function setTags(newTags) {
+		if(typeof(newTags) === "string") {
+			tags = [newTags];
+		} else {
+			tags = newTags;
+		}
+	};
+
+	// get a list of the current tags
+	this.getTags = function getTags() {
+		return tags;
+	};
+
+	// add one or more tags
+	this.addTags = function addTags(newTags) {
+		if(typeof(newTags) === "string") {
+			tags.push[newTags];
+		} else {
+			tags.concat(newTags);
+		}
+	};
+
+	// remove one or more tags
+	this.removeTags = function removeTags(byeTags) {
+		if(typeof(byeTags) === "string") {
+			tags = tags.filter(function(tag) {
+				return tag !== byeTags;
+			});
+		} else {
+			for(i in byeTags) {
+				tags = tags.filter(function(tag) {
+					return tag !== byeTags[i];
+				});
+			}
+		}
+	};
+
+	// clear all tags
+	this.clearTags = function clearTags() {
+		tags = [];
+	};
+
+	// draw the object
+	this.draw = function draw(ctx, scale, x, y) {
+		if(x === undefined || y === undefined) {
+			this.drawPart(ctx, this.obj, scale, this.x * scale, this.y * scale);
+		} else {
+			this.drawPart(ctx, this.obj, scale, x, y);
+		}
+	},
+
+
+	/* initialize */
+	//FIXME: just do this above, inline.  why load()?
 	this.load(obj, cb);
 };
 
-function penduinART(game) {
+// take care of resize, pause etc
+function penduinSCENE(canvas, logicWidth, logicHeight,
+					  logicTickFunc, logicTicksPerSec) {
+	/* internals */
+	var ctx = canvas.getContext("2d");
+	var bg = "silver";
+	logicWidth = logicWidth || 320;
+	logicHeight = logicHeight || 240;
+	var scale = 1.0;
+	var objects = [];
+	logicTickFunc = logicTickFunc || function() {};
+	logicTicksPerSec = logicTicksPerSec || 60;
+	var lastFrame = 0;
+	var requestAnimationFrame = (window.requestAnimationFrame ||
+								 window.mozRequestAnimationFrame ||
+								 window.webkitRequestAnimationFrame ||
+								 window.msRequestAnimationFrame);
+	var run = false;
+	var showfps = false;
+
+	this.resize = function resize() {
+		canvas.width = 0;
+		canvas.height = 0;
+
+		var parent = canvas.parentElement;
+		var ratio = logicWidth / logicHeight;
+		var toowide = (parent.clientWidth / parent.clientHeight) > ratio;
+
+		if(toowide) {
+			canvas.width = parent.clientHeight * ratio;
+			canvas.height = parent.clientHeight;
+		} else {
+			canvas.width = parent.clientWidth;
+			canvas.height = parent.clientWidth / ratio;
+		}
+
+		scale = canvas.width / logicWidth;
+	};
+
+	this.render = function render(time) {
+		if(run) {
+			requestAnimationFrame(this.render.bind(this));
+		}
+		if(time - lastFrame < 15) {  // 60fps max
+			return;
+		}
+
+		//FIXME: calculate ticks based on framerate
+		logicTickFunc();
+
+		ctx.save();
+
+		ctx.fillStyle = bg;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		// draw objects ordered by obj.y coordinate
+		var ordered = Object.keys(objects).sort(function(a, b) {
+			return a.y - b.y;
+		});
+		for(i in ordered) {
+			objects[ordered[i]].draw(ctx, scale);
+		}
+
+		if(showfps) {
+			var str = Math.floor( 1000/ (time - lastFrame) ).toString() + "fps";
+			ctx.font = "16px sans";
+			ctx.fillStyle = "black";
+			ctx.textBaseline = "top";
+			ctx.fillText(str, 17, 17);
+			ctx.fillStyle = "white";
+			ctx.fillText(str, 16, 16);
+		}
+
+		ctx.restore();
+		lastFrame = time;
+	};
+
+
+	/* API */
+
+	// add a named penduinOBJ to the scene
+	this.addOBJ = function addOBJ(obj, name) {
+		if(!name) {
+			name = obj.name || "anonymous";
+		}
+		objects[name] = obj;
+		return obj;
+	};
+	// remove (and return) a scene object
+	this.removeOBJ = function removeOBJ(name) {
+		var obj = objects[name] || null;
+		if(obj) {
+			delete objects[name];
+		}
+		return obj;
+	};
+
+	// set the scene's background color
+	this.setBG = function setBG(color) {
+		bg = color;
+	};
+
+	// pause the scene
+	this.pause = function pause() {
+		run = false;
+	};
+	// resume the scene
+	this.resume = function resume() {
+		run = true;
+		lastFrame = 0;
+		requestAnimationFrame(this.render.bind(this));
+	};
+
+	// show frames per second (true or false)
+	this.showFPS = function showFPS(show) {
+		showfps = show;
+	};
+
+
+	/* initialize */
+	run = true;
+	this.resize();
+	window.addEventListener("resize", this.resize.bind(this), false);
+	requestAnimationFrame(this.render.bind(this));
+}
+
+
+// leaving this here for now, probably dump it though.
+function _penduinART(game) {
 	this.game = {};
 	this.scene = {};
 	this.state = {};

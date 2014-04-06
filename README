@@ -34,6 +34,7 @@ penduinART aims to be:
 - Fun and easy for 2D web games.  Not one engine to rule them all.
 - Efficient and fast, though not at the expense of clarity or ease of use.
 - FirefoxOS phone ready.  (And any low-end but highly-interesting web device.)
+- Wii U browser (and Nintendo Web Framework) compatible
 - Free as in speech, free as in beer, free to learn from and build upon.
 
 
@@ -45,12 +46,13 @@ Working right now:
 - any-point-in-the-armature rotation, transparency, scaling effects
 - "thingmaker" tool helps easily arrange images into armatures
 - simple examples showing penduinART usage
+- tag support (show/hide pieces depending on a persistent tag list)
+- scene support (manage objects/scale, early tick/render loop)
 
 Planned features:
 - poses and animations supported in engine and "thingmaker"
 - generic input mapper with keyboard, mouse, gamepad, touch support
 - "placemaker" tool for easily creating multi-layered scrollable settings
-- full scene support in engine
 - game templates for easily starting new projects
 - music assets: loading and customizable looping
 - full object management and animation

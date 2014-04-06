@@ -96,6 +96,31 @@ function buildPieceUI(piece) {
 
 	var info = document.createElement("span");
 
+	var ctx = canv.getContext("2d");
+	var click = function(evt) {
+		var x = evt.clientX;
+		var y = evt.clientY;
+		if(!evt.fake) {
+			x -= this.getBoundingClientRect().left;
+			x -= this.clientLeft + this.scrollLeft;
+			y -= this.getBoundingClientRect().top;
+			y -= this.clientTop + this.scrollTop;
+		}
+		x = Math.floor(x);
+		y = Math.floor(y);
+
+		canv.width = canv.width;
+		ctx.drawImage(piece.gpx, 0, 0);
+		crosshair(ctx, x, y);
+
+		piece.pivot.x = x;
+		piece.pivot.y = y;
+		info.querySelector(".pivotx").value = x;
+		info.querySelector(".pivoty").value = y;
+		updateData();
+	};
+	canv.addEventListener("click", click);
+
 	var input = null;
 	info.style.display = "inline-block";
 	info.style.verticalAlign = "top";
@@ -128,7 +153,9 @@ function buildPieceUI(piece) {
 	input.value = piece.pivot.x;
 	input.addEventListener("change", function(evt) {
 		piece.pivot.x = this.value;
-		updateData();
+//		updateData();
+		click.bind(canv)({fake: true,
+						  clientX: piece.pivot.x, clientY: piece.pivot.y});
 	});
 	info.appendChild(input);
 	info.appendChild(document.createElement("br"));
@@ -138,7 +165,9 @@ function buildPieceUI(piece) {
 	input.value = piece.pivot.y;
 	input.addEventListener("change", function(evt) {
 		piece.pivot.y = this.value;
-		updateData();
+//		updateData();
+		click.bind(canv)({fake: true,
+						  clientX: piece.pivot.x, clientY: piece.pivot.y});
 	});
 	info.appendChild(input);
 
@@ -247,27 +276,8 @@ function buildPieceUI(piece) {
 
 	dom.appendChild(info);
 
-	var ctx = canv.getContext("2d");
-	var click = function(evt) {
-		var x = evt.clientX - this.getBoundingClientRect().left;
-		var y = evt.clientY - this.getBoundingClientRect().top;
-		x -= this.clientLeft + this.scrollLeft;
-		y -= this.clientTop + this.scrollTop;
-		x = Math.floor(x);
-		y = Math.floor(y);
-
-		canv.width = canv.width;
-		ctx.drawImage(piece.gpx, 0, 0);
-		crosshair(ctx, x, y);
-
-		piece.pivot.x = x;
-		piece.pivot.y = y;
-		info.querySelector(".pivotx").value = x;
-		info.querySelector(".pivoty").value = y;
-		updateData();
-	};
-	canv.addEventListener("click", click);
-	click.bind(canv)({clientX: piece.pivot.x, clientY: piece.pivot.y});
+	click.bind(canv)({fake: true,
+					  clientX: piece.pivot.x, clientY: piece.pivot.y});
 
 	return dom;
 }
