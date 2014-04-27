@@ -41,6 +41,10 @@ function penduinOBJ(obj, cb) {
 							cb();
 						}
 					}.bind(this), false);
+					img.addEventListener("error", function(e) {
+						console.error("ERROR: could not load " + e.target.src);
+					}.bind(this), false);
+
 					document.body.appendChild(img); //todo: somewhere tidier
 				}
 			}
@@ -54,12 +58,14 @@ function penduinOBJ(obj, cb) {
 		for(i in this.obj._img) {
 			total++;
 		}
+		console.log("loaded "+this.obj._imgLoaded+" of "+total);
 		return total === this.obj._imgLoaded;
 	},
 
 	this.drawPart = function drawPart(ctx, part, scale, x, y) {
-		if(part.tag && tags.indexOf(part.tag) < 0) {
-			// this part has a tag we're not using; skip drawing.
+		if((part.tag && tags.indexOf(part.tag) < 0) ||
+		   (part.hidetag && tags.indexOf(part.hidetag) >= 0)) {
+			// this part's tag or hidetag says to skip drawing.
 			return;
 		}
 
@@ -136,7 +142,7 @@ function penduinOBJ(obj, cb) {
 		if(typeof(newTags) === "string") {
 			tags = [newTags];
 		} else {
-			tags = newTags;
+			tags = [].concat(newTags);
 		}
 	};
 
@@ -148,9 +154,9 @@ function penduinOBJ(obj, cb) {
 	// add one or more tags
 	this.addTags = function addTags(newTags) {
 		if(typeof(newTags) === "string") {
-			tags.push[newTags];
+			tags = tags.concat([newTags]);
 		} else {
-			tags.concat(newTags);
+			tags = tags.concat(newTags);
 		}
 	};
 
@@ -201,11 +207,13 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	var objects = [];
 	logicTickFunc = logicTickFunc || function() {};
 	logicTicksPerSec = logicTicksPerSec || 60;
+	var logicTickWait = Math.floor(1000 / logicTicksPerSec);
 	var lastFrame = 0;
 	var requestAnimationFrame = (window.requestAnimationFrame ||
 								 window.mozRequestAnimationFrame ||
 								 window.webkitRequestAnimationFrame ||
 								 window.msRequestAnimationFrame);
+	var frametime = 0;
 	var run = false;
 	var showfps = false;
 
@@ -229,15 +237,25 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	};
 
 	this.render = function render(time) {
+		var ticks = 0;
 		if(run) {
 			requestAnimationFrame(this.render.bind(this));
 		}
-		if(time - lastFrame < 15) {  // 60fps max
+		if(time - lastFrame < 16) {  // 60fps max
 			return;
 		}
 
-		//FIXME: calculate ticks based on framerate
-		logicTickFunc();
+		// call logicTickFunc() at logicTicksPerSec, regardless of framerate
+		if(frametime) {
+			frametime += time - lastFrame;
+		} else {
+			frametime = time - lastFrame;
+		}
+		while(frametime >= logicTickWait) {
+			logicTickFunc(this);
+			ticks++
+			frametime -= logicTickWait;
+		}
 
 		ctx.save();
 
@@ -254,12 +272,13 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 
 		if(showfps) {
 			var str = Math.floor( 1000/ (time - lastFrame) ).toString() + "fps";
-			ctx.font = "16px sans";
+			str += " " + ticks + "ticks";
+			ctx.font = "32px monospace, Monaco, 'Lucida Console'";
 			ctx.fillStyle = "black";
 			ctx.textBaseline = "top";
-			ctx.fillText(str, 17, 17);
+			ctx.fillText(str, 33, 33);
 			ctx.fillStyle = "white";
-			ctx.fillText(str, 16, 16);
+			ctx.fillText(str, 32, 32);
 		}
 
 		ctx.restore();
