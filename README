@@ -47,7 +47,10 @@ Working right now:
 - "thingmaker" tool helps easily arrange images into armatures
 - simple examples showing penduinART usage
 - tag support (show/hide pieces depending on a persistent tag list)
-- scene support (manage objects/scale, decoupled tick/render loop)
++ scene support (manage objects/scale, decoupled tick/render loop)
+  - pause/resume, fps/ticks display toggle
+  - N64-style scene transitions (star wipe!)
+  - jaggy (non-antialiased) rendering option
 
 Planned features:
 - poses and animations supported in engine and "thingmaker"

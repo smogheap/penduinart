@@ -7,35 +7,28 @@ if(!console) {
 
 function penduinOBJ(obj, cb) {
 	/* internals */
-	//FIXME: no this. everywhere
-	this.x = 0;
-	this.y = 0;
-	tags = [];
+	this.x = obj.x;
+	this.y = obj.y;
+	this.obj = obj;
+	var tags = [];
 
-	this.load = function load(obj, cb) {
-		this.obj = obj || {};
-		this.obj._$ = {};
-		this.obj._img = {};
-		this.obj._imgLoaded = 0;
-		this.loadPart([this.obj], cb);
-	},
 	this.loadPart = function loadPart(part, cb) {
 		var img;
 		var i = 0;
 		for(i = 0; i < part.length; i++) {
 			if(part[i].image && part[i].name) {
 				console.log("loading '" + part[i].name + "' (" + part[i].image + ")");
-				this.obj._$[part[i].name] = part[i];
+				obj._$[part[i].name] = part[i];
 
-				if(this.obj._img[part[i].image] === undefined) {
-					this.obj._img[part[i].image] = null;
+				if(obj._img[part[i].image] === undefined) {
+					obj._img[part[i].image] = null;
 
 					img = document.createElement("img");
 					img.src = part[i].image;
 					img.style.display = "none";
-					this.obj._img[part[i].image] = img;
+					obj._img[part[i].image] = img;
 					img.addEventListener("load", function() {
-						this.obj._imgLoaded++;
+						obj._imgLoaded++;
 						if(this.loadedAll() && cb) {
 							console.log("all done");
 							cb();
@@ -44,8 +37,7 @@ function penduinOBJ(obj, cb) {
 					img.addEventListener("error", function(e) {
 						console.error("ERROR: could not load " + e.target.src);
 					}.bind(this), false);
-
-					document.body.appendChild(img); //todo: somewhere tidier
+					//document.body.appendChild(img);
 				}
 			}
 
@@ -55,14 +47,14 @@ function penduinOBJ(obj, cb) {
 	},
 	this.loadedAll = function loadedAll() {
 		var total = 0;
-		for(i in this.obj._img) {
+		for(i in obj._img) {
 			total++;
 		}
-		console.log("loaded "+this.obj._imgLoaded+" of "+total);
-		return total === this.obj._imgLoaded;
+		console.log("loaded " + obj._imgLoaded + " of " + total);
+		return total === obj._imgLoaded;
 	},
 
-	this.drawPart = function drawPart(ctx, part, scale, x, y) {
+	this.drawPart = function drawPart(ctx, part, scale, displayx, displayy) {
 		if((part.tag && tags.indexOf(part.tag) < 0) ||
 		   (part.hidetag && tags.indexOf(part.hidetag) >= 0)) {
 			// this part's tag or hidetag says to skip drawing.
@@ -74,7 +66,11 @@ function penduinOBJ(obj, cb) {
 		var offy = 0;
 		ctx.save();
 
-		ctx.translate(x, y);
+		if(displayx === undefined || displayy === undefined) {
+			ctx.translate(this.x * scale, this.y * scale);
+		} else {
+			ctx.translate(displayx, displayy);
+		}
 		if(part.offset) {
 			ctx.translate(part.offset.x, part.offset.y);
 		}
@@ -116,7 +112,7 @@ function penduinOBJ(obj, cb) {
 		}
 
 		if(part.image) {
-			var img = this.obj._img[part.image];
+			var img = obj._img[part.image];
 			if(part.pivot) {
 				ctx.drawImage(img, -part.pivot.x, -part.pivot.y);
 			} else {
@@ -181,23 +177,84 @@ function penduinOBJ(obj, cb) {
 	};
 
 	// draw the object
-	this.draw = function draw(ctx, scale, x, y) {
-		if(x === undefined || y === undefined) {
-			this.drawPart(ctx, this.obj, scale, this.x * scale, this.y * scale);
-		} else {
-			this.drawPart(ctx, this.obj, scale, x, y);
-		}
+	this.draw = function draw(ctx, scale, displayx, displayy) {
+		this.drawPart(ctx, obj, scale, displayx, displayy);
 	},
 
 
 	/* initialize */
-	//FIXME: just do this above, inline.  why load()?
-	this.load(obj, cb);
-};
+	obj = obj || {};
+	obj._$ = {};
+	obj._img = {};
+	obj._imgLoaded = 0;
+	this.loadPart([obj], cb);
+}
+
+function penduinTRANSITION(cb, img, zoom, out, duration, rotation) {
+	if(!img) {
+		img = document.createElement("img");
+		img.src = [
+			"data:image/png;base64,",
+			"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAACA0AAA",
+			"gNAE5VN+UAAAAB3RJTUUH3godEy0hfgAXhAAAAThJREFUOMul0z1uFEEUBOCvW7",
+			"MryxnCLBmy7LXEGUwIAWfggFyBAGKLCxAg1gTIAfhHZIDXo2mSGjRYeGSJkjqZr",
+			"qo3r1+94hZaaxUdlljk8w226Espw5RfJsISwR4OscYq1xf4hFNc4qaU0v4YRLyD",
+			"p3iBY+zjASq+4zNO8A4f8bOU0rpUWET8Ci/xJIbj/eMYjn/1Gh+w7dLzHp5HvE7",
+			"/ddLqMmcdzjm+tda+jg92iGepfFs8xU44x9F0deK8H8Jd4hG7OMARljX9r/Bw0v",
+			"Mcah73ERbVf6ImJOcZVX8PzRDuBfqahG0y518hzOFHuBtc11Q9TUi+xPAubHGG9",
+			"zHou1LK0Fq7TMJWkyDtTiYypPIZ3uAtrkopw1yUD/La5qI8t0xHGdW4TJucK2z/",
+			"WqZ7rHOP63+t828VpGlpgl0TVwAAAABJRU5ErkJggg=="
+		].join("");
+	}
+	duration = duration || 1000;
+	if(isNaN(parseInt(zoom))) {
+		zoom = 2;
+	}
+	if(isNaN(parseInt(rotation))) {
+		rotation = rotation ? Math.PI : 0;
+	}
+	cb = cb || function() {};
+
+	this.draw = function draw(ctx, timeOffset) {
+		var prog = timeOffset / duration;
+		//prog = (Math.exp(prog) - 1) / (Math.E - 1);
+		if(!prog) {
+			// haven't started yet
+			if(!out) {
+				ctx.fillStyle = "black";
+				ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+			}
+			return false;
+		} else if(prog > 1.0) {
+			// done, return true
+			if(out) {
+				ctx.fillStyle = "black";
+				ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+			}
+			cb();
+			return true;
+		}
+		if(out) {
+			prog = 1 - prog;
+		}
+
+		ctx.save();
+		ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
+		ctx.scale(prog * (ctx.canvas.width / img.width * zoom),
+				  prog * (ctx.canvas.width / img.width * zoom));
+		if(rotation) {
+			ctx.rotate(prog * rotation);
+		}
+		ctx.globalCompositeOperation = "destination-atop";
+		ctx.drawImage(img, img.width / -2, img.height / -2);
+		ctx.restore();
+		return false;
+	}
+}
 
 // take care of resize, pause etc
 function penduinSCENE(canvas, logicWidth, logicHeight,
-					  logicTickFunc, logicTicksPerSec) {
+					  logicTickFunc, logicTicksPerSec, jaggy) {
 	/* internals */
 	var ctx = canvas.getContext("2d");
 	var bg = "silver";
@@ -216,6 +273,10 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	var frametime = 0;
 	var run = false;
 	var showfps = false;
+	var tags = [];
+	var uniq = 0;
+	var trans = null;
+	var transStart = 0;
 
 	this.resize = function resize() {
 		canvas.width = 0;
@@ -232,15 +293,20 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 			canvas.width = parent.clientWidth;
 			canvas.height = parent.clientWidth / ratio;
 		}
+		ctx.mozImageSmoothingEnabled = !jaggy;
+		ctx.webkitImageSmoothingEnabled = !jaggy;
+		ctx.msImageSmoothingEnabled = !jaggy;
+		ctx.imageSmoothingEnabled = !jaggy;
 
 		scale = canvas.width / logicWidth;
 	};
 
 	this.render = function render(time) {
 		var ticks = 0;
-		if(run) {
-			requestAnimationFrame(this.render.bind(this));
+		if(!run) {
+			return;
 		}
+		requestAnimationFrame(this.render.bind(this));
 		if(time - lastFrame < 16) {  // 60fps max
 			return;
 		}
@@ -255,6 +321,7 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 			logicTickFunc(this);
 			ticks++
 			frametime -= logicTickWait;
+			frametime /= 1.5;  // HACK: prefer natural to exact fps
 		}
 
 		ctx.save();
@@ -270,15 +337,26 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 			objects[ordered[i]].draw(ctx, scale);
 		}
 
+		// draw any active transition
+		if(trans) {
+			if(!transStart) {
+				transStart = time;
+			}
+			if(trans.draw(ctx, time - transStart)) {
+				trans = null;
+				transStart = 0;
+			}
+		}
+
 		if(showfps) {
 			var str = Math.floor( 1000/ (time - lastFrame) ).toString() + "fps";
 			str += " " + ticks + "ticks";
-			ctx.font = "32px monospace, Monaco, 'Lucida Console'";
+			ctx.font = "20px monospace, Monaco, 'Lucida Console'";
 			ctx.fillStyle = "black";
 			ctx.textBaseline = "top";
-			ctx.fillText(str, 33, 33);
+			ctx.fillText(str, 3, 3);
 			ctx.fillStyle = "white";
-			ctx.fillText(str, 32, 32);
+			ctx.fillText(str, 2, 2);
 		}
 
 		ctx.restore();
@@ -291,9 +369,10 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	// add a named penduinOBJ to the scene
 	this.addOBJ = function addOBJ(obj, name) {
 		if(!name) {
-			name = obj.name || "anonymous";
+			name = obj.name || "anonymous" + (uniq++);
 		}
 		objects[name] = obj;
+		obj.scene = this;
 		return obj;
 	};
 	// remove (and return) a scene object
@@ -316,14 +395,66 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	};
 	// resume the scene
 	this.resume = function resume() {
-		run = true;
-		lastFrame = 0;
-		requestAnimationFrame(this.render.bind(this));
+		if(!run) {
+			run = true;
+			lastFrame = 0;
+			requestAnimationFrame(this.render.bind(this));
+		}
+	};
+
+	// begin a transition
+	this.transition = function transition(transObj) {
+		trans = transObj;
+		transStart = 0;
 	};
 
 	// show frames per second (true or false)
 	this.showFPS = function showFPS(show) {
 		showfps = show;
+	};
+
+	/* FIXME: duplicate of penduinOBJ code */
+	// set/replace tags (to show/hide different parts)
+	this.setTags = function setTags(newTags) {
+		if(typeof(newTags) === "string") {
+			tags = [newTags];
+		} else {
+			tags = [].concat(newTags);
+		}
+	};
+
+	// get a list of the current tags
+	this.getTags = function getTags() {
+		return tags;
+	};
+
+	// add one or more tags
+	this.addTags = function addTags(newTags) {
+		if(typeof(newTags) === "string") {
+			tags = tags.concat([newTags]);
+		} else {
+			tags = tags.concat(newTags);
+		}
+	};
+
+	// remove one or more tags
+	this.removeTags = function removeTags(byeTags) {
+		if(typeof(byeTags) === "string") {
+			tags = tags.filter(function(tag) {
+				return tag !== byeTags;
+			});
+		} else {
+			for(i in byeTags) {
+				tags = tags.filter(function(tag) {
+					return tag !== byeTags[i];
+				});
+			}
+		}
+	};
+
+	// clear all tags
+	this.clearTags = function clearTags() {
+		tags = [];
 	};
 
 
