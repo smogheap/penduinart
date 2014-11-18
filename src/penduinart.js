@@ -283,6 +283,9 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 								 window.mozRequestAnimationFrame ||
 								 window.webkitRequestAnimationFrame ||
 								 window.msRequestAnimationFrame);
+	requestAnimationFrame = requestAnimationFrame || function(cb) {
+		setTimeout(cb, 10, new Date());
+	};
 	var frametime = 0;
 	var run = false;
 	var showfps = false;
@@ -481,76 +484,3 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	window.addEventListener("resize", this.resize.bind(this), false);
 	requestAnimationFrame(this.render.bind(this));
 }
-
-
-// leaving this here for now, probably dump it though.
-function _penduinART(game) {
-	this.game = {};
-	this.scene = {};
-	this.state = {};
-	this.blankgame = {
-		"title": "sample penduinART game",
-		"width": 320,
-		"height": 240
-	};
-
-	this.init = function init(game) {
-		this.canvas = document.querySelector("canvas");
-		this.ctx = this.canvas.getContext("2d");
-
-		if(this.initialized) {
-			this.load(game);
-			return;
-		}
-
-		window.addEventListener("resize", this.resize.bind(this), false);
-		var requestAnimationFrame = (window.requestAnimationFrame ||
-									 window.mozRequestAnimationFrame ||
-									 window.webkitRequestAnimationFrame ||
-									 window.msRequestAnimationFrame);
-		window.requestAnimationFrame = requestAnimationFrame;
-
-		this.load(game);
-		this.initialized = true;
-	};
-
-	this.resize = function resize() {
-		this.canvas.width = 0;
-		this.canvas.height = 0;
-
-		var parent = this.canvas.parentElement;
-		var ratio = this.game.width / this.game.height;
-		var toowide = (parent.clientWidth / parent.clientHeight) > ratio;
-
-		if(toowide) {
-			this.canvas.width = parent.clientHeight * ratio;
-			this.canvas.height = parent.clientHeight;
-		} else {
-			this.canvas.width = parent.clientWidth;
-			this.canvas.height = parent.clientWidth / ratio;
-		}
-
-		this.render();
-	};
-
-	this.load = function load(game) {
-		if(game) {
-			this.game = game;
-		} else {
-			this.game = this.blankgame;
-		}
-		window.document.title = this.game.title;
-		if(this.game.custom && typeof(this.game.custom) === "function") {
-			this.game.custom();
-		}
-		if(this.game.animation && this.game.animation.load) {
-			var l = this.game.animation.load;
-
-			if(l.custom && typeof(l.custom) === "function") {
-				l.custom();
-			}
-		}
-	};
-
-	this.init(game);
-};
