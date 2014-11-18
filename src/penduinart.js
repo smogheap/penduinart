@@ -253,6 +253,7 @@ function penduinTRANSITION(cb, img, zoom, duration, rotation) {
 
 		ctx.save();
 		ctx.globalCompositeOperation = "destination-atop";
+		ctx.fillStyle = "black";
 		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 		ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
 		ctx.scale(prog * (ctx.canvas.width / img.width * zoom),
