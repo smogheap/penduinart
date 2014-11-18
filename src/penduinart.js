@@ -191,6 +191,7 @@ function penduinOBJ(obj, cb) {
 }
 
 function penduinTRANSITION(cb, img, zoom, duration, rotation) {
+	var scratchCtx = document.createElement("canvas").getContext("2d");
 	if(typeof(img) === "string") {
 		console.log("auto-loading " + img);
 		var im = document.createElement("img");
@@ -251,18 +252,22 @@ function penduinTRANSITION(cb, img, zoom, duration, rotation) {
 			prog = 1 - prog;
 		}
 
+		// some canvas implementations won't blot outer area without scratch
+		scratchCtx.canvas.width = ctx.canvas.width;
+		scratchCtx.canvas.height = ctx.canvas.height;
+		scratchCtx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
+		scratchCtx.scale(prog * (ctx.canvas.width / img.width * zoom),
+						 prog * (ctx.canvas.width / img.width * zoom));
+		if(rotation) {
+			scratchCtx.rotate(prog * rotation);
+		}
+		scratchCtx.drawImage(img, img.width / -2, img.height / -2);
+
 		ctx.save();
 		ctx.globalCompositeOperation = "destination-atop";
-		ctx.fillStyle = "black";
-		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-		ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
-		ctx.scale(prog * (ctx.canvas.width / img.width * zoom),
-				  prog * (ctx.canvas.width / img.width * zoom));
-		if(rotation) {
-			ctx.rotate(prog * rotation);
-		}
-		ctx.drawImage(img, img.width / -2, img.height / -2);
+		ctx.drawImage(scratchCtx.canvas, 0, 0);
 		ctx.restore();
+
 		return false;
 	}
 }
