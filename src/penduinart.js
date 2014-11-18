@@ -252,13 +252,14 @@ function penduinTRANSITION(cb, img, zoom, duration, rotation) {
 		}
 
 		ctx.save();
+		ctx.globalCompositeOperation = "destination-atop";
+		ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 		ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
 		ctx.scale(prog * (ctx.canvas.width / img.width * zoom),
 				  prog * (ctx.canvas.width / img.width * zoom));
 		if(rotation) {
 			ctx.rotate(prog * rotation);
 		}
-		ctx.globalCompositeOperation = "destination-atop";
 		ctx.drawImage(img, img.width / -2, img.height / -2);
 		ctx.restore();
 		return false;
