@@ -1,12 +1,15 @@
 var TM = {
-	pieces: [
-	],
-	thing: {
-	},
+	pieces: [],
+	thing: {},
 	asm: null,
 	asmCtx: null,
 	json: null,
-	po: null
+	obj: null,
+	pose: null,
+	tempPoseData: {},
+	poseData: {},
+	poseCtx: null,
+	poseObj: null
 };
 
 
@@ -15,8 +18,14 @@ function render() {
 	TM.asm.width = TM.asm.width;
 	TM.asmCtx.fillStyle = "green";
 	TM.asmCtx.fillRect(0, 0, TM.asm.width, TM.asm.height);
-	TM.po.draw(TM.asmCtx, scale, 320, 300);
+	TM.obj.draw(TM.asmCtx, scale, 320, 300);
 	crosshair(TM.asmCtx, 320, 300);
+
+	TM.pose.width = TM.pose.width;
+	TM.poseCtx.fillStyle = "blue";
+	TM.poseCtx.fillRect(0, 0, TM.pose.width, TM.pose.height);
+	TM.poseObj.draw(TM.poseCtx, scale, 320, 300);
+	crosshair(TM.poseCtx, 320, 300);
 }
 
 function updateData() {
@@ -59,10 +68,33 @@ function updateData() {
 		}
 	};
 	buildThing(TM.thing);
+	TM.thing.pose = TM.poseData;
 
 	TM.json.value = JSON.stringify(TM.thing, null, "\t");
 
-	TM.po = new penduinOBJ(TM.thing, render);
+	TM.obj = new penduinOBJ(TM.thing, render);
+	TM.poseObj = new penduinOBJ(TM.thing, render);
+
+	var poselist = document.getElementById("poselist");
+	var sel = poselist.value;
+	var i = 0;
+	var opt = null;
+	while(poselist.firstChild) {
+		poselist.removeChild(poselist.firstChild);
+	}
+	opt = document.createElement("option");
+	opt.value = "";
+	opt.innerHTML = "(neutral)";
+	poselist.appendChild(opt);
+	for(i in TM.poseData) {
+		opt = document.createElement("option");
+		opt.value = i;
+		opt.innerHTML = i;
+		if(sel === opt.value) {
+			opt.selected = true;
+		}
+		poselist.appendChild(opt);
+	}
 }
 
 function crosshair(ctx, x, y) {
@@ -287,6 +319,8 @@ window.addEventListener("load", function() {
 	// init globals
 	TM.asm = document.querySelector("#assemble");
 	TM.asmCtx = TM.asm.getContext("2d");
+	TM.pose = document.querySelector("#pose");
+	TM.poseCtx = TM.pose.getContext("2d");
 	TM.json = document.querySelector("#json");
 
 	// build up data and UI for piece images
@@ -331,10 +365,13 @@ window.addEventListener("load", function() {
 		updateData();
 	});
 	var option = null;
+	var option2;
 	for(i = 0; i < TM.pieces.length; i++) {
 		option = document.createElement("option");
 		option.value = option.innerHTML = TM.pieces[i].name;
 		document.querySelector("#pieces").appendChild(option);
+		option2 = option.cloneNode(true);
+		document.querySelector("#posepieces").appendChild(option2);
 	}
 	var dragging = false;
 	var dragX = 0;
@@ -380,7 +417,8 @@ window.addEventListener("load", function() {
 			if(!sel[i].selected) {
 				continue;
 			}
-			dragSelected[sel[i].value] = findPiece(sel[i].value);
+			dragSelected[sel[i].value] = TM.obj.$[sel[i].value];
+			//dragSelected[sel[i].value] = findPiece(sel[i].value);
 		}
 	};
 	var mousemove = function(evt) {
@@ -413,7 +451,7 @@ window.addEventListener("load", function() {
 				dragSelected[i].scale += x / 10;
 				break;
 			case "alpha":
-				if(dragSelected[i].alpha === "undefined") {
+				if(dragSelected[i].alpha === undefined) {
 					dragSelected[i].alpha = 1;
 				}
 				dragSelected[i].alpha += x / 100;
@@ -480,4 +518,113 @@ window.addEventListener("load", function() {
 	TM.asm.addEventListener("mousemove", mousemove);
 	TM.asm.addEventListener("mouseup", mouseup);
 	TM.asm.addEventListener("mouseout", mouseup);
+
+	var posemousedown = function(evt) {
+		dragging = true;
+		dragX = evt.clientX;
+		dragY = evt.clientY;
+
+		dragScale = parseFloat(document.querySelector("#scale").value);
+		dragSelected = {};
+		var sel = document.querySelectorAll("#posepieces option");
+		var i = 0;
+
+		for(i = 0; i < sel.length; i++) {
+			if(!sel[i].selected) {
+				continue;
+			}
+			dragSelected[sel[i].value] = TM.poseObj.$[sel[i].value];
+		}
+	};
+	var posemousemove = function(evt) {
+		if(!dragging) {
+			return;
+		}
+		var x = evt.clientX - dragX;
+		var y = evt.clientY - dragY;
+		dragX = evt.clientX;
+		dragY = evt.clientY;
+		var scale = dragScale || 1.0;
+
+		var i = 0;
+		for(i in dragSelected) {
+			switch(document.querySelector("#posemode").value) {
+			case "offset":
+				dragSelected[i].offset.x += x / scale;
+				dragSelected[i].offset.y += y / scale;
+				break;
+			case "rotate":
+				if(!dragSelected[i].rotate) {
+					dragSelected[i].rotate = 0;
+				}
+				dragSelected[i].rotate += x;
+				break;
+			case "scale":
+				if(dragSelected[i].scale === undefined) {
+					dragSelected[i].scale = 1;
+				}
+				dragSelected[i].scale += x / 10;
+				break;
+			case "alpha":
+				if(dragSelected[i].alpha === undefined) {
+					dragSelected[i].alpha = 1;
+				}
+				dragSelected[i].alpha += x / 100;
+				if(dragSelected[i].alpha > 1) {
+					dragSelected[i].alpha = 1;
+				} else if(dragSelected[i].alpha < 0) {
+					dragSelected[i].alpha = 0;
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		render();
+	};
+	var posemouseup = function() {
+		if(!dragging) {
+			return;
+		}
+		dragging = false;
+
+		var i = null;
+		var j = 0;
+		var ui = null;
+		var piece = null;
+
+		TM.tempPoseData = TM.poseObj.getPoseData();
+		updateData();
+		TM.poseObj.setPoseData(TM.tempPoseData);
+		render();
+	};
+	TM.pose.addEventListener("mousedown", posemousedown);
+	TM.pose.addEventListener("mousemove", posemousemove);
+	TM.pose.addEventListener("mouseup", posemouseup);
+	TM.pose.addEventListener("mouseout", posemouseup);
+	document.getElementById("posereset").addEventListener("click", function() {
+		TM.poseObj.setPose(null);
+		TM.tempPoseData = {};
+		updateData();
+	});
+	document.getElementById("poseadd").addEventListener("click", function() {
+		var name = document.getElementById("posename").value || "untitled";
+		TM.poseData[name] = TM.poseObj.getPoseData();
+		updateData();
+		TM.poseObj.setPoseData(TM.tempPoseData);
+		render();
+		document.getElementById("poselist").value = name;
+	});
+	document.getElementById("posedel").addEventListener("click", function() {
+		var name = document.getElementById("poselist").value;
+		if(name) {
+			delete TM.poseData[name];
+		}
+		TM.tempPoseData = {};
+		updateData();
+	});
+	document.getElementById("poselist").addEventListener("change", function() {
+		TM.poseObj.setPoseData(TM.poseData[this.value]);
+		render();
+	});
 });

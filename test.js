@@ -94,21 +94,21 @@ function walk(timestamp) {
 		prog %= 1;
 	}
 	if(prog < 0.25) {
-		warrior.obj._$.legs._rotate = ((prog * 4) * 95) - 5;
-		warrior.obj._$.arm._rotate = (prog * 4) * 15;
-		warrior.obj._$.body._rotate = (prog * 4) * 5;
+		warrior.$.legs._rotate = ((prog * 4) * 95) - 5;
+		warrior.$.arm._rotate = (prog * 4) * 15;
+		warrior.$.body._rotate = (prog * 4) * 5;
 	} else if(prog < 0.5) {
-		warrior.obj._$.legs._rotate = 90;
-		warrior.obj._$.arm._rotate = 15;
-		warrior.obj._$.body._rotate = 5;
+		warrior.$.legs._rotate = 90;
+		warrior.$.arm._rotate = 15;
+		warrior.$.body._rotate = 5;
 	} else if(prog < 0.75) {
-		warrior.obj._$.legs._rotate = (-(((prog - 0.75) * 4) * 95)) - 5;
-		warrior.obj._$.arm._rotate = -((prog - 0.75) * 4) * 15;
-		warrior.obj._$.body._rotate = -((prog - 0.75) * 4) * 5;
+		warrior.$.legs._rotate = (-(((prog - 0.75) * 4) * 95)) - 5;
+		warrior.$.arm._rotate = -((prog - 0.75) * 4) * 15;
+		warrior.$.body._rotate = -((prog - 0.75) * 4) * 5;
 	} else {
-		warrior.obj._$.legs._rotate = -5;
-		warrior.obj._$.arm._rotate = 0;
-		warrior.obj._$.body._rotate = 0;
+		warrior.$.legs._rotate = -5;
+		warrior.$.arm._rotate = 0;
+		warrior.$.body._rotate = 0;
 	}
 
 	render();

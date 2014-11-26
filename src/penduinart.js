@@ -6,19 +6,28 @@ if(!console) {
 }
 
 function penduinOBJ(obj, cb) {
-	/* internals */
+	/* consumer-available stuff */
 	this.x = obj.x;
 	this.y = obj.y;
 	this.obj = obj;
-	var tags = [];
+	this.$ = {};  // hash of part names for direct manipulation
 
-	this.loadPart = function loadPart(part, cb) {
+	/* internal stuff */
+	var tags = [];
+	var pose = null;
+	var anim = null;
+	var animstart = 0;
+	var frompose = null;
+	var posetime = 0;
+
+	var loadPart = function loadPart(part, cb) {
 		var img;
 		var i = 0;
+		var $ = this.$;
 		for(i = 0; i < part.length; i++) {
 			if(part[i].image && part[i].name) {
 				console.log("loading '" + part[i].name + "' (" + part[i].image + ")");
-				obj._$[part[i].name] = part[i];
+				$[part[i].name] = part[i];
 
 				if(obj._img[part[i].image] === undefined) {
 					obj._img[part[i].image] = null;
@@ -27,10 +36,13 @@ function penduinOBJ(obj, cb) {
 					img.src = part[i].image;
 					img.style.display = "none";
 					obj._img[part[i].image] = img;
-					img.addEventListener("load", function() {
+					img.addEventListener("load", function(e) {
+						//e.target.removeEventListener("load", this);
 						obj._imgLoaded++;
-						if(this.loadedAll() && cb) {
+						if(loadedAll() && cb) {
 							console.log("all done");
+							obj.pose = obj.pose || {};
+							obj.pose["_default"] = capturePose(obj);
 							cb();
 						}
 					}.bind(this), false);
@@ -41,20 +53,23 @@ function penduinOBJ(obj, cb) {
 				}
 			}
 
-			this.loadPart([].concat(part[i].above || [],
-									part[i].below || []), cb);
+			loadPart.bind(this)([].concat(part[i].above || [],
+							   part[i].below || []), cb);
 		}
-	},
-	this.loadedAll = function loadedAll() {
+	}.bind(this);
+	var loadedAll = function loadedAll() {
 		var total = 0;
 		for(i in obj._img) {
 			total++;
 		}
 		console.log("loaded " + obj._imgLoaded + " of " + total);
+		if(obj._imgLoaded > total) {
+			console.log("greater, why?", obj);
+		}
 		return total === obj._imgLoaded;
-	},
+	};
 
-	this.drawPart = function drawPart(ctx, part, scale, displayx, displayy) {
+	var drawPart = function drawPart(ctx, part, scale, displayx, displayy) {
 		if((part.tag && tags.indexOf(part.tag) < 0) ||
 		   (part.hidetag && tags.indexOf(part.hidetag) >= 0)) {
 			// this part's tag or hidetag says to skip drawing.
@@ -81,7 +96,7 @@ function penduinOBJ(obj, cb) {
 		if(part.alpha !== undefined) {
 			ctx.globalAlpha = part.alpha;
 		}
-		if(part.alpha !== undefined) {
+		if(part._alpha !== undefined) {
 			ctx.globalAlpha = part._alpha;
 		}
 
@@ -107,7 +122,7 @@ function penduinOBJ(obj, cb) {
 
 		if(part.below) {
 			for(i in part.below) {
-				this.drawPart(ctx, part.below[i], 1, offx, offy);
+				drawPart(ctx, part.below[i], 1, offx, offy);
 			}
 		}
 
@@ -123,15 +138,134 @@ function penduinOBJ(obj, cb) {
 
 		if(part.above) {
 			for(i in part.above) {
-				this.drawPart(ctx, part.above[i], 1, offx, offy);
+				drawPart(ctx, part.above[i], 1, offx, offy);
 			}
 		}
 
 		ctx.restore();
+	}.bind(this);
+
+	var lerp = function lerp(from, to, prog) {
+		return (1 - prog) * from + prog * to;
 	};
+
+	var lerpPose = function lerpPose(dest, src1, src2, prog) {
+		dest = dest || {};
+		Object.keys(src1).every(function(key) {
+			if(!isNaN(src1.alpha) && !isNaN(src2.alpha)) {
+				dest[key].alpha = lerp(src1.alpha, src2.alpha, prog);
+			}
+			if(!isNaN(src1.scale) && !isNaN(src2.scale)) {
+				dest[key].scale = lerp(src1.scale, src2.scale, prog);
+			}
+			if(!isNaN(src1.rotate) && !isNaN(src2.rotate)) {
+				dest[key].rotate = lerp(src1.rotate, src2.rotate, prog);
+			}
+			if(src1.offset && src2.offset) {
+				dest[key].offset = dest[key].offset || {};
+				if(!isNaN(src1.offset.x) && !isNaN(src2.offset.x)) {
+					dest[key].offset.x = lerp(src1.offset.x, src2.offset.x,
+											  prog);
+				}
+				if(!isNaN(src1.offset.y) && !isNaN(src2.offset.y)) {
+					dest[key].offset.y = lerp(src1.offset.y, src2.offset.y,
+											  prog);
+				}
+			}
+		});
+		return dest;
+	};
+
+	var capturePose = function capturePose(user) {
+		var posedata = {};
+		var data = null;
+		Object.keys(this.$).every(function(key) {
+			if((data = this.$[key])) {
+				if(user) {
+					posedata[key] = {};
+					posedata[key].alpha = data.alpha;
+					posedata[key].scale = data.scale;
+					posedata[key].rotate = data.rotate;
+					if(data.offset) {
+						posedata[key].offset = posedata[key].offset || {};
+						posedata[key].offset.x = data.offset.x;
+						posedata[key].offset.y = data.offset.y;
+					}
+				} else {
+					posedata[key]._alpha = data.alpha;
+					posedata[key]._scale = data.scale;
+					posedata[key]._rotate = data.rotate;
+					if(data._offset) {
+						posedata[key]._offset = posedata[key]._offset || {};
+						posedata[key]._offset.x = data.offset.x;
+						posedata[key]._offset.y = data.offset.y;
+					}
+				}
+			} else {
+				console.log("capturePose: no data in key " + key);
+			}
+			return true;
+		}.bind(this));
+		return posedata;
+	}.bind(this);
+
+	var applyPose = function applyPose(posedata, user) {
+		var data = null;
+		var part = null;
+		Object.keys(this.$).every(function(key) {
+			var part = this.$[key];
+			if(posedata && (data = posedata[key])) {
+				part.alpha = data.alpha;
+				part.scale = data.scale;
+				part.rotate = data.rotate;
+				part.offset = part.offset || {};
+				if(data.offset) {
+					part.offset.x = data.offset.x;
+					part.offset.y = data.offset.y;
+				}
+			} else {
+				part.alpha = 1;
+				part.scale = 0;
+				part.rotate = 0;
+				part.offset = part.offset || {};
+				part.offset.x = 0;
+				part.offset.y = 0;
+			}
+			return true;
+		}.bind(this));
+	}.bind(this);
+
+	var solvePose = function solvePose(now) {
+		now = now || new Date();
+		var prog = 0;
+
+		//TODO: look at pose, anim, animstarted
+		if(anim) {
+		} else if(pose) {
+			if(posetime) {
+				if(now - animstart > posetime) {
+					// finished
+					applyPose(part, obj.pose[pose]);
+					animstart = 0;
+					posetime = 0;
+				} else {
+					// interpolate
+					applyPose(lerpPose(null, frompose, obj.pose[pose]));
+				}
+			}
+		}
+	};
+
+	/* initialize */
+	obj = JSON.parse(JSON.stringify(obj));  // prevent dupes/refs between objs
+	obj._img = {};
+	obj._imgLoaded = 0;
+	loadPart([obj], cb);
 
 
 	/* API */
+
+	/* API:TAGS */
 
 	// set/replace tags (to show/hide different parts)
 	this.setTags = function setTags(newTags) {
@@ -176,18 +310,42 @@ function penduinOBJ(obj, cb) {
 		tags = [];
 	};
 
-	// draw the object
-	this.draw = function draw(ctx, scale, displayx, displayy) {
-		this.drawPart(ctx, obj, scale, displayx, displayy);
+	/* API: POSING */
+
+	// set a pose by name and animate to it
+	this.setPose = function setPose(name, transtime, now) {
+		pose = name || "_default";
+		if(isNaN(transtime)) {
+			transtime = 500;
+		}
+		animstart = now || new Date();
+		frompose = capturePose(obj);
+	};
+
+	// get and set full pose data
+	this.getPoseData = function getPoseData() {
+		return capturePose(true);
+	};
+	this.setPoseData = function setPoseData(data) {
+		return applyPose(data, true);
+	};
+
+	/* API: ANIMATION */
+	// TODO: implement animations :^)
+	// set an animation
+	this.setAnimation = function setAnimation(name, transtime, now) {
+		if(isNaN(transtime)) {
+			transtime = 500;
+		}
+		anim = name;
+		animstart = now || new Date();
+		frompose = capturePose(obj);
 	},
 
-
-	/* initialize */
-	obj = obj || {};
-	obj._$ = {};
-	obj._img = {};
-	obj._imgLoaded = 0;
-	this.loadPart([obj], cb);
+	// draw the object
+	this.draw = function draw(ctx, scale, displayx, displayy) {
+		drawPart(ctx, obj, scale, displayx, displayy);
+	};
 }
 
 function penduinTRANSITION(cb, img, zoom, duration, rotation) {

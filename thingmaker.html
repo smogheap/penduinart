@@ -50,19 +50,40 @@
       <option value="rotate">rotate</option>
       <option value="scale">scale</option>
       <option value="alpha">alpha</option>
-      <option value="hitbox">set hitbox</option>
+<!--  <option value="hitbox">set hitbox</option>
       <option value="pan">pan view</option>
-      <option value="zoom">zoom view</option>
+      <option value="zoom">zoom view</option>  -->
     </select>
     <br>
     <canvas width=640 height=360 id="assemble"></canvas>
     <hr>
     <h1>Step 3</h1>
     <p>
+      Pose the thing.
+    </p>
+    active pieces: <select multiple id="posepieces"></select>
+    drag mode:
+    <select id="posemode">
+      <option value="offset">offset</option>
+      <option value="rotate">rotate</option>
+      <option value="scale">scale</option>
+      <option value="alpha">alpha</option>
+    </select>
+    <br>
+    <canvas width=640 height=360 id="pose"></canvas>
+    <br>
+    <input type="button" id="posereset" value="reset">
+    pose name: <input id="posename">
+    <input type="button" id="poseadd" value="add &gt;&gt;">
+    <select id="poselist" style="border: 4px solid blue;"></select>
+    <input type="button" id="posedel" value="&lt;&lt; delete">
+    <hr>
+    <h1>Step 4</h1>
+    <p>
       TODO: build animation editing tools :^)
     </p>
     <hr>
-    <h1>Step 4</h1>
+    <h1>Step 5</h1>
     <p>
       Here is the thing's JSON!
     </p>
