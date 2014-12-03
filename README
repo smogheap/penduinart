@@ -14,14 +14,13 @@ out images, but is focused on armatures made of image pieces.
 Where to start
 --------------
 
-The files "thingmaker.html" and "test.html" are the most interesting at the
+The files "thingmaker.html" and "test*.html" are the most interesting at the
 moment.  They're not pretty, but using and editing them will show you around
 the current state of penduinART.
 
 Music support is in-progress and can be played with using "musictool.html".
 
-Eventually, "src/penduinart.js" will be the main engine.
-
+The file "src/penduinart.js" is the main engine.
 Probably, "src/smogheapinput.js" will be revamped and become its own thing.
 
 
@@ -51,15 +50,20 @@ Working right now:
   - pause/resume, fps/ticks display toggle
   - N64-style scene transitions (star wipe!)
   - jaggy (non-antialiased) rendering option
+- pose support in engine and thingmaker
 
 Planned features:
-- poses and animations supported in engine and "thingmaker"
+- pose-sequence animations supported in engine and "thingmaker"
 - generic input mapper with keyboard, mouse, gamepad, touch support
 - "placemaker" tool for easily creating multi-layered scrollable settings
 - game templates for easily starting new projects
 - music assets: loading and customizable looping
+- sound fx assets and integration with animation timing
 - full object management and animation
-- collision detection, off-limits area marking
+- collision detection, in/out-bounds area marking
 - particle effects
+- scene loading/unloading/swapping
+
+Possible extras:
 - procedural armatures
 - scrapheap monster demo - build randomized critters from scrapheap assets
