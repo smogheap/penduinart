@@ -18,6 +18,7 @@ function penduinOBJ(obj, cb) {
 	var anim = null;
 	var animstart = 0;
 	var frompose = null;
+	var lastsolved = null;
 	var posetime = 0;
 
 	var loadPart = function loadPart(part, cb) {
@@ -42,7 +43,8 @@ function penduinOBJ(obj, cb) {
 						if(loadedAll() && cb) {
 							console.log("all done");
 							obj.pose = obj.pose || {};
-							obj.pose["_default"] = capturePose(obj);
+							obj.pose["_default"] = capturePose();
+							lastsolved = capturePose();
 							cb();
 						}
 					}.bind(this), false);
@@ -81,7 +83,7 @@ function penduinOBJ(obj, cb) {
 		var offy = 0;
 		ctx.save();
 
-		if(displayx === undefined || displayy === undefined) {
+		if(isNaN(displayx) || isNaN(displayy)) {
 			ctx.translate(this.x * scale, this.y * scale);
 		} else {
 			ctx.translate(displayx, displayy);
@@ -93,10 +95,10 @@ function penduinOBJ(obj, cb) {
 			ctx.translate(part._offset.x, part._offset.y);
 		}
 
-		if(part.alpha !== undefined) {
+		if(!isNaN(part.alpha)) {
 			ctx.globalAlpha = part.alpha;
 		}
-		if(part._alpha !== undefined) {
+		if(!isNaN(part._alpha)) {
 			ctx.globalAlpha = part._alpha;
 		}
 
@@ -152,26 +154,31 @@ function penduinOBJ(obj, cb) {
 	var lerpPose = function lerpPose(dest, src1, src2, prog) {
 		dest = dest || {};
 		Object.keys(src1).every(function(key) {
-			if(!isNaN(src1.alpha) && !isNaN(src2.alpha)) {
-				dest[key].alpha = lerp(src1.alpha, src2.alpha, prog);
+			dest[key] = dest[key] || {};
+			if(!isNaN(src1[key].alpha) && !isNaN(src2[key].alpha)) {
+				dest[key].alpha = lerp(src1[key].alpha, src2[key].alpha, prog);
 			}
-			if(!isNaN(src1.scale) && !isNaN(src2.scale)) {
-				dest[key].scale = lerp(src1.scale, src2.scale, prog);
+			if(!isNaN(src1[key].scale) && !isNaN(src2[key].scale)) {
+				dest[key].scale = lerp(src1[key].scale, src2[key].scale, prog);
 			}
-			if(!isNaN(src1.rotate) && !isNaN(src2.rotate)) {
-				dest[key].rotate = lerp(src1.rotate, src2.rotate, prog);
+			if(!isNaN(src1[key].rotate) && !isNaN(src2[key].rotate)) {
+				dest[key].rotate = lerp(src1[key].rotate, src2[key].rotate,
+										prog);
+			} else {
+				console.log(key, src1, src2);
 			}
-			if(src1.offset && src2.offset) {
+			if(src1[key].offset && src2[key].offset) {
 				dest[key].offset = dest[key].offset || {};
-				if(!isNaN(src1.offset.x) && !isNaN(src2.offset.x)) {
-					dest[key].offset.x = lerp(src1.offset.x, src2.offset.x,
-											  prog);
+				if(!isNaN(src1[key].offset.x) && !isNaN(src2[key].offset.x)) {
+					dest[key].offset.x = lerp(src1[key].offset.x,
+											  src2[key].offset.x, prog);
 				}
-				if(!isNaN(src1.offset.y) && !isNaN(src2.offset.y)) {
-					dest[key].offset.y = lerp(src1.offset.y, src2.offset.y,
-											  prog);
+				if(!isNaN(src1[key].offset.y) && !isNaN(src2[key].offset.y)) {
+					dest[key].offset.y = lerp(src1[key].offset.y,
+											  src2[key].offset.y, prog);
 				}
 			}
+			return true;
 		});
 		return dest;
 	};
@@ -180,6 +187,7 @@ function penduinOBJ(obj, cb) {
 		var posedata = {};
 		var data = null;
 		Object.keys(this.$).every(function(key) {
+			posedata[key] = posedata[key] || {};
 			if((data = this.$[key])) {
 				if(user) {
 					posedata[key] = {};
@@ -192,13 +200,19 @@ function penduinOBJ(obj, cb) {
 						posedata[key].offset.y = data.offset.y;
 					}
 				} else {
-					posedata[key]._alpha = data.alpha;
-					posedata[key]._scale = data.scale;
-					posedata[key]._rotate = data.rotate;
+					posedata[key].alpha = (isNaN(data._alpha) ?
+										   1 : data._alpha);
+					posedata[key].scale = (isNaN(data._scale) ?
+										   1 : data._scale);
+					posedata[key].rotate = (isNaN(data._rotate) ?
+											1 : data._rotate);
+					posedata[key].offset = posedata[key].offset || {};
 					if(data._offset) {
-						posedata[key]._offset = posedata[key]._offset || {};
-						posedata[key]._offset.x = data.offset.x;
-						posedata[key]._offset.y = data.offset.y;
+						posedata[key].offset.x = data._offset.x;
+						posedata[key].offset.y = data._offset.y;
+					} else {
+						posedata[key].offset.x = 0;
+						posedata[key].offset.y = 0;
 					}
 				}
 			} else {
@@ -214,22 +228,42 @@ function penduinOBJ(obj, cb) {
 		var part = null;
 		Object.keys(this.$).every(function(key) {
 			var part = this.$[key];
-			if(posedata && (data = posedata[key])) {
-				part.alpha = data.alpha;
-				part.scale = data.scale;
-				part.rotate = data.rotate;
-				part.offset = part.offset || {};
-				if(data.offset) {
-					part.offset.x = data.offset.x;
-					part.offset.y = data.offset.y;
+			if(user) {
+				if(posedata && (data = posedata[key])) {
+					part.alpha = data.alpha;
+					part.scale = data.scale;
+					part.rotate = data.rotate;
+					part.offset = part.offset || {};
+					if(data.offset) {
+						part.offset.x = data.offset.x;
+						part.offset.y = data.offset.y;
+					}
+				} else {
+					part.alpha = 1;
+					part.scale = 0;
+					part.rotate = 0;
+					part.offset = part.offset || {};
+					part.offset.x = 0;
+					part.offset.y = 0;
 				}
 			} else {
-				part.alpha = 1;
-				part.scale = 0;
-				part.rotate = 0;
-				part.offset = part.offset || {};
-				part.offset.x = 0;
-				part.offset.y = 0;
+				if(posedata && (data = posedata[key])) {
+					part._alpha = data.alpha;
+					part._scale = data.scale;
+					part._rotate = data.rotate;
+					part._offset = part._offset || {};
+					if(data._offset) {
+						part._offset.x = data.offset.x;
+						part._offset.y = data.offset.y;
+					}
+				} else {
+					part._alpha = 1;
+					part._scale = 0;
+					part._rotate = 0;
+					part._offset = part.offset || {};
+					part._offset.x = 0;
+					part._offset.y = 0;
+				}
 			}
 			return true;
 		}.bind(this));
@@ -239,18 +273,20 @@ function penduinOBJ(obj, cb) {
 		now = now || new Date();
 		var prog = 0;
 
-		//TODO: look at pose, anim, animstarted
 		if(anim) {
+			//TODO
 		} else if(pose) {
 			if(posetime) {
-				if(now - animstart > posetime) {
+				if(now - animstart >= posetime) {
 					// finished
-					applyPose(part, obj.pose[pose]);
+					applyPose(obj.pose[pose]);
 					animstart = 0;
 					posetime = 0;
 				} else {
 					// interpolate
-					applyPose(lerpPose(null, frompose, obj.pose[pose]));
+					prog = (now - animstart) / posetime;
+					lerpPose(lastsolved, frompose, obj.pose[pose], prog);
+					applyPose(lastsolved);
 				}
 			}
 		}
@@ -312,14 +348,19 @@ function penduinOBJ(obj, cb) {
 
 	/* API: POSING */
 
-	// set a pose by name and animate to it
-	this.setPose = function setPose(name, transtime, now) {
+	// animate to a pose specified by name
+	this.setPose = function setPose(name, transtime) {
 		pose = name || "_default";
 		if(isNaN(transtime)) {
 			transtime = 500;
 		}
-		animstart = now || new Date();
-		frompose = capturePose(obj);
+		animstart = 0;
+		posetime = 0;
+		frompose = capturePose();
+		requestAnimationFrame(function(time) {
+			animstart = time;
+			posetime = transtime;
+		});
 	};
 
 	// get and set full pose data
@@ -339,11 +380,14 @@ function penduinOBJ(obj, cb) {
 		}
 		anim = name;
 		animstart = now || new Date();
-		frompose = capturePose(obj);
+		frompose = capturePose();
 	},
 
 	// draw the object
-	this.draw = function draw(ctx, scale, displayx, displayy) {
+	this.draw = function draw(ctx, scale, displayx, displayy, time) {
+		if(time) {
+			solvePose(time);
+		}
 		drawPart(ctx, obj, scale, displayx, displayy);
 	};
 }
@@ -436,8 +480,8 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	/* internals */
 	var ctx = canvas.getContext("2d");
 	var bg = "silver";
-	logicWidth = logicWidth || 320;
-	logicHeight = logicHeight || 240;
+	logicWidth = logicWidth || canvas.width || 320;
+	logicHeight = logicHeight || canvas.height || 240;
 	var scale = 1.0;
 	var objects = [];
 	logicTickFunc = logicTickFunc || function() {};
@@ -518,7 +562,7 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 			return a.y - b.y;
 		});
 		for(i in ordered) {
-			objects[ordered[i]].draw(ctx, scale);
+			objects[ordered[i]].draw(ctx, scale, undefined, undefined, time);
 		}
 
 		// draw any active transition

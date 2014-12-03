@@ -1,3 +1,6 @@
+// NOTE: this works but is pretty outdated.
+// test2.js shows some new and improved ways to use penduinART.
+
 var canv = null;
 var ctx = null;
 var warrior = null;
