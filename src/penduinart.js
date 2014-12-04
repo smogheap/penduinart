@@ -457,6 +457,9 @@ function penduinTRANSITION(cb, img, zoom, duration, rotation) {
 		// some canvas implementations won't blot outer area without scratch
 		scratchCtx.canvas.width = ctx.canvas.width;
 		scratchCtx.canvas.height = ctx.canvas.height;
+		scratchCtx.mozImageSmoothingEnabled = ctx.mozImageSmoothingEnabled;
+		scratchCtx.webkitImageSmoothingEnabled =ctx.webkitImageSmoothingEnabled;
+		scratchCtx.imageSmoothingEnabled = ctx.imageSmoothingEnabled;
 		scratchCtx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
 		scratchCtx.scale(prog * (ctx.canvas.width / img.width * zoom),
 						 prog * (ctx.canvas.width / img.width * zoom));
@@ -521,10 +524,7 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 			canvas.width = parent.clientWidth;
 			canvas.height = parent.clientWidth / ratio;
 		}
-		ctx.mozImageSmoothingEnabled = !jaggy;
-		ctx.webkitImageSmoothingEnabled = !jaggy;
-		ctx.msImageSmoothingEnabled = !jaggy;
-		ctx.imageSmoothingEnabled = !jaggy;
+		this.setJaggy(jaggy);
 
 		scale = canvas.width / logicWidth;
 	};
@@ -615,6 +615,15 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 	// set the scene's background color
 	this.setBG = function setBG(color) {
 		bg = color;
+	};
+
+	// set whether the scaling is jaggy or smooth
+	this.setJaggy = function setJaggy(jag) {
+		jaggy = jag;
+		ctx.mozImageSmoothingEnabled = !jaggy;
+		ctx.webkitImageSmoothingEnabled = !jaggy;
+		ctx.msImageSmoothingEnabled = !jaggy;
+		ctx.imageSmoothingEnabled = !jaggy;
 	};
 
 	// pause the scene
