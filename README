@@ -42,7 +42,7 @@ State of penduinART
 
 Working right now:
 - base engine supports loading image resources and rendering
-- any-point-in-the-armature rotation, transparency, scaling effects
+- any-point-in-the-armature controls: rotate, transparency, scale, flip
 - "thingmaker" tool helps easily arrange images into armatures
 - simple examples showing penduinART usage
 - tag support (show/hide pieces depending on a persistent tag list)
