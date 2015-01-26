@@ -51,6 +51,7 @@ Working right now:
   - N64-style scene transitions (star wipe!)
   - jaggy (non-antialiased) rendering option
 - pose support in engine and thingmaker
+- basic "instance" support - quick array of positioned/scaled clones
 
 Planned features:
 - pose-sequence animations supported in engine and "thingmaker"
