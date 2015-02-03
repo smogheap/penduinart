@@ -52,6 +52,7 @@ Working right now:
   - jaggy (non-antialiased) rendering option
 - pose support in engine and thingmaker
 - basic "instance" support - quick array of positioned/scaled clones
+- basic layered background support - optimized multi-object rendering
 
 Planned features:
 - pose-sequence animations supported in engine and "thingmaker"
