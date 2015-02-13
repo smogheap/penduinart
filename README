@@ -53,6 +53,9 @@ Working right now:
 - pose support in engine and thingmaker
 - basic "instance" support - quick array of positioned/scaled clones
 - basic layered background support - optimized multi-object rendering
++ full-scene visual effects
+  - vignette
+  - motion ghosting
 
 Planned features:
 - pose-sequence animations supported in engine and "thingmaker"
