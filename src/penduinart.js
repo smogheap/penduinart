@@ -342,6 +342,26 @@ function penduinOBJ(obj, cb) {
 		dirty = true;
 		instances = arr;
 	};
+	this.addInstances = function addInstances(newInst) {
+		dirty = true;
+		if(typeof(newInst) === "object") {
+			instances.push(newInst);
+		} else {
+			instances = instances.concat(newInst);
+		}
+	};
+	this.removeInstances = function removeInstances(byeInst) {
+		dirty = true;
+		if(typeof(byeInst) === "object") {
+			byeInst = [byeInst];
+		}
+		byeInst.every(function(inst) {
+			instances = instances.filter(function(item) {
+				return !(item.x === inst.x && item.y === inst.y);
+			});
+			return true;
+		});
+	};
 
 	/* API: TAGS */
 
