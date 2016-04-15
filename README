@@ -57,7 +57,8 @@ Working right now:
   - vignette
   - motion ghosting
   - glow/bloom
-+ basic text objects (captions, score, etc)
+- basic text objects (captions, score, etc)
+- screenshot
 
 Planned features:
 - pose-sequence animations supported in engine and "thingmaker"

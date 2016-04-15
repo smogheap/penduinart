@@ -1039,6 +1039,23 @@ function penduinSCENE(canvas, logicWidth, logicHeight,
 		tags = [];
 	};
 
+	// take a screenshot
+	this.screenshot = function screenshot() {
+		var a = document.createElement("a");
+		a.download = "screenshot.png";
+		if(a.download && btoa && canvas.toDataURL) {
+			a.href = canvas.toDataURL();
+			a.style.display = "none";
+			a.addEventListener("click", function(e) {
+				e.stopPropagation();
+			});
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		} else {
+			console.error("ERROR: could not take a screenshot");
+		}
+	};
 
 	/* initialize */
 	run = true;
