@@ -1,4 +1,0 @@
-penduinART
-==========
-
-HTML5 Game engine.
